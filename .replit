@@ -1,0 +1,12 @@
+modules = ["nodejs-20", "python-3.12", "web"]
+run = "run gme"
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+run = ["sh", "-c", "run gme"]
+
+[[ports]]
+localPort = 5000
+externalPort = 80

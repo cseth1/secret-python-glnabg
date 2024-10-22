@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adventure Game</title>
+    <style>
+        body {
+            font-family: monospace;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        #output {
+            width: 80%;
+            height: 400px;
+            background-color: #2d2d2d;
+            border: 1px solid #3e3e3e;
+            padding: 10px;
+            overflow-y: scroll;
+            white-space: pre-wrap;
+            margin-bottom: 20px;
+        }
+        #input {
+            width: 80%;
+            padding: 5px;
+            background-color: #2d2d2d;
+            color: #d4d4d4;
+            border: 1px solid #3e3e3e;
+        }
+        #loading {
+            display: none;
+            color: #d4d4d4;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Adventure Game</h1>
+    <div id="output"></div>
+    <input type="text" id="input" placeholder="Enter your command (e.g., 'look', 'inventory')">
+    <div id="loading">Processing...</div>
+    <script>
+        const output = document.getElementById('output');
+        const input = document.getElementById('input');
+        const loading = document.getElementById('loading');
+
+        function appendOutput(text) {
+            output.textContent += text + '\n';
+            output.scrollTop = output.scrollHeight;
+        }
+
+        input.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                const command = input.value.trim();
+                appendOutput('> ' + command);
+
+                // Disable input and show loading indicator
+                input.disabled = true;
+                loading.style.display = 'block';
+
+                fetch('/run', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({command: command})
+                })
+                .then(response => response.text())
+                .then(text => appendOutput(text))
+                .catch(error => {
+                    console.error('Error:', error);
+                    appendOutput('Error: Unable to connect to the server. Please try again later.');
+                })
+                .finally(() => {
+                    // Hide loading indicator and re-enable input
+                    input.disabled = false;
+                    loading.style.display = 'none';
+                });
+
+                input.value = '';
+            }
+        });
+
+        // Initial game start
+        fetch('/run', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({command: 'start'})
+        })
+        .then(response => response.text())
+        .then(text => {
+            appendOutput(text);
+            appendOutput("Hint: Type 'look', 'inventory', 'go north', or 'help' to get started.");
+        })
+        .catch(error => console.error('Error:', error));
+
+        // Autofocus input field
+        window.onload = function() {
+            input.focus();
+        };
+    </script>
+</body>
+</html>
